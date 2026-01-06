@@ -1,0 +1,29 @@
+2025-12-07 07:53:49 - RAW_BODY: {
+  "name": "Test User",
+  "email": "harishkandimalla92@gmail.com",
+  "password": "Secret123!"
+}
+
+2025-12-07 07:53:49 - JSON_DECODE_ERR: 0 msg: No error
+2025-12-07 07:53:49 - PARSED_JSON: {"name":"Test User","email":"harishkandimalla92@gmail.com","password":"Secret123!"}
+2025-12-07 07:53:49 - Exception: PDO $pdo not found. Check db.php path and that it defines $pdo.
+2025-12-07 07:53:56 - RAW_BODY: {
+  "name": "Test User",
+  "email": "harishkandimalla92@gmail.com",
+  "password": "Secret123!"
+}
+
+2025-12-07 07:53:56 - JSON_DECODE_ERR: 0 msg: No error
+2025-12-07 07:53:56 - PARSED_JSON: {"name":"Test User","email":"harishkandimalla92@gmail.com","password":"Secret123!"}
+2025-12-07 07:53:56 - Exception: PDO $pdo not found. Check db.php path and that it defines $pdo.
+2025-12-07 08:13:01 - RAW_BODY: {
+  "name": "Harish",
+  "email": "harishkandimalla92@gmail.com",
+  "password": "Secret123!"
+}
+
+2025-12-07 08:13:01 - JSON_DECODE_ERR: 0 msg: No error
+2025-12-07 08:13:01 - PARSED_JSON: {"name":"Harish","email":"harishkandimalla92@gmail.com","password":"Secret123!"}
+2025-12-07 08:13:01 - DB_INFO: {"db":"voiceapp","user":"root@localhost"}
+2025-12-07 08:13:01 - PREPARE SQL: INSERT INTO users (name, email, password_hash, created_at) VALUES (?, ?, ?, NOW())
+2025-12-07 08:13:01 - INSERT_RESULT: ok=1 lastId=0

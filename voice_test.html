@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Voice Task Browser Test</title>
+</head>
+<body style="font-family: Arial; padding: 20px">
+
+<h2>Voice → Task Test</h2>
+
+<button onclick="send()">Create Task</button>
+
+<pre id="result"></pre>
+
+<script>
+function send() {
+    fetch("http://localhost/voiceapp/ai/voice_to_task.php", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            user_id: 1,
+            text: "schedule meeting"
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("result").innerText =
+            JSON.stringify(data, null, 2);
+    })
+    .catch(err => {
+        document.getElementById("result").innerText = err;
+    });
+}
+</script>
+
+</body>
+</html>
