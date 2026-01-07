@@ -1,27 +1,68 @@
 <?php
-// verify.php
-header('Content-Type: application/json; charset=utf-8');
-require_once 'db.php';
+header("Content-Type: application/json; charset=UTF-8");
+require_once 'db_connect.php';
 
-$raw = file_get_contents('php://input');
-$data = json_decode($raw,true) ?: $_POST;
-$email = trim($data['email'] ?? '');
-$code = trim($data['code'] ?? '');
+/* ========================= PHPMailer setup ========================= */
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+require 'phpmailer/PHPMailer.php';
+require 'phpmailer/SMTP.php';
+require 'phpmailer/Exception.php';
 
-if (!$email || !$code) { http_response_code(400); echo json_encode(['ok'=>false,'error'=>'missing']); exit; }
+$response = array();
 
-$stmt = $pdo->prepare("SELECT id, verification_expiry FROM users WHERE email = ? AND verification_code = ? AND verified = 0 LIMIT 1");
-$stmt->execute([$email, $code]);
-$row = $stmt->fetch();
-if (!$row) { http_response_code(400); echo json_encode(['ok'=>false,'error'=>'invalid_code_or_already_verified']); exit; }
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $data = json_decode(file_get_contents("php://input"));
 
-if (strtotime($row['verification_expiry']) < time()) {
-    http_response_code(400);
-    echo json_encode(['ok'=>false,'error'=>'otp_expired']);
-    exit;
+    if (isset($data->email) && isset($data->otp)) {
+        $email = trim($data->email);
+        $otp = trim($data->otp);
+
+        $stmt = $conn->prepare("SELECT otp, otp_expiry FROM users WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $row = $result->fetch_assoc();
+            $db_otp = $row['otp'];
+            $db_expiry = $row['otp_expiry'];
+
+            if ($db_otp === $otp) {
+                if ($db_expiry !== NULL && strtotime($db_expiry) > time()) {
+                    // OTP is valid and not expired. 
+                    // Verify the user by clearing the OTP (or setting is_verified if you add it)
+                    $updateStmt = $conn->prepare("UPDATE users SET otp = NULL, otp_expiry = NULL WHERE email = ?");
+                    $updateStmt->bind_param("s", $email);
+                    
+                    if ($updateStmt->execute()) {
+                        $response['ok'] = true;
+                        $response['message'] = "Email verified successfully.";
+                    } else {
+                        $response['ok'] = false;
+                        $response['message'] = "Failed to update verification status.";
+                    }
+                    $updateStmt->close();
+                } else {
+                    $response['ok'] = false;
+                    $response['message'] = "OTP expired.";
+                }
+            } else {
+                $response['ok'] = false;
+                $response['message'] = "Invalid OTP.";
+            }
+        } else {
+            $response['ok'] = false;
+            $response['message'] = "User not found.";
+        }
+        $stmt->close();
+    } else {
+        $response['ok'] = false;
+        $response['message'] = "Email and OTP required.";
+    }
+} else {
+    $response['ok'] = false;
+    $response['message'] = "Invalid request method";
 }
 
-// mark verified
-$up = $pdo->prepare("UPDATE users SET verified = 1, verification_code = NULL, verification_expiry = NULL WHERE id = ?");
-$up->execute([$row['id']]);
-echo json_encode(['ok'=>true,'message'=>'verified']);
+echo json_encode($response);

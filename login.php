@@ -9,57 +9,57 @@ $data = json_decode(file_get_contents("php://input"), true);
 $email    = trim($data['email'] ?? '');
 $password = trim($data['password'] ?? '');
 
-if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $password === '') {
-    http_response_code(400);
-    echo json_encode([
-        'ok' => false,
-        'error' => 'invalid_input'
-    ]);
+/* ---------- VALIDATION ---------- */
+if ($email === '') {
+    echo json_encode(["ok"=>false,"error"=>"email_required"]);
+    exit;
+}
+
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    echo json_encode(["ok"=>false,"error"=>"invalid_email"]);
+    exit;
+}
+
+if ($password === '') {
+    echo json_encode(["ok"=>false,"error"=>"password_required"]);
     exit;
 }
 
 /* ---------- FETCH USER ---------- */
 $stmt = $pdo->prepare("
-    SELECT id, password_hash, verified 
-    FROM users 
+    SELECT id, name, email, password
+    FROM `register`
     WHERE email = ?
 ");
 $stmt->execute([$email]);
 
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
+/* ---------- CHECK USER ---------- */
 if (!$user) {
-    http_response_code(401);
     echo json_encode([
-        'ok' => false,
-        'error' => 'invalid_credentials'
-    ]);
-    exit;
-}
-
-/* ---------- CHECK VERIFIED ---------- */
-if ((int)$user['verified'] !== 1) {
-    http_response_code(403);
-    echo json_encode([
-        'ok' => false,
-        'error' => 'email_not_verified'
+        "ok"=>false,
+        "error"=>"email invalid_credentials"
     ]);
     exit;
 }
 
 /* ---------- CHECK PASSWORD ---------- */
-if (!password_verify($password, $user['password_hash'])) {
-    http_response_code(401);
+if (!password_verify($password, $user['password'])) {
     echo json_encode([
-        'ok' => false,
-        'error' => 'invalid_credentials'
+        "ok"=>false,
+        "error"=>"password invalid_credentials"
     ]);
     exit;
 }
 
 /* ---------- LOGIN SUCCESS ---------- */
 echo json_encode([
-    'ok' => true,
-    'message' => 'Login successful',
-    'user_id' => $user['id']
+    "ok"=>true,
+    "message"=>"login_success",
+    "user"=>[
+        "id"=>$user['id'],
+        "name"=>$user['name'],
+        "email"=>$user['email']
+    ]
 ]);

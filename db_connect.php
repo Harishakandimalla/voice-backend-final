@@ -2,7 +2,7 @@
 $servername = "localhost";
 $username = "root"; // Default XAMPP username
 $password = "";     // Default XAMPP password (empty)
-$dbname = "voice_command_db"; // YOUR DATABASE NAME
+$dbname = "voiceapp"; // YOUR DATABASE NAME
 
 // Create connection
 $conn = new mysqli($servername, $username, $password, $dbname);
